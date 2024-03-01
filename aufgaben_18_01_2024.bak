@@ -1,0 +1,57 @@
+;; The first three lines of this file were inserted by DrRacket. They record metadata
+;; about the language level of this file in a form that our tools can easily process.
+#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname aufgaben_18_01_2024) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #f #t none #f () #f)))
+; Aufgabe 5
+
+;; Berechnet die Miete, die bezahlt werden muss,
+;; wenn ein SPiele auf einem gegnerischen Bahnhof landet.
+;; Diese Miete ist abhängig von der Anzahl der Bahnhöfe, die dem Gegner gehören.
+(define miete
+  (λ [bahnhof-anzahl]
+    (* 250 (expt 2 bahnhof-anzahl))))
+
+(= (miete 1) 500)
+(= (miete 2) 1000)
+(= (miete 3) 2000)
+(= (miete 4) 4000)
+
+
+; Aufgabe 6
+(define kartenpreis 500)
+(define fixkosten 2000)
+(define kosten-pro-besucher 50)
+
+;; Berechnet den Profit des Kinos anhand der Besucherzahl
+(define profit
+  (λ [besucherzahl]
+    (- (* kartenpreis besucherzahl)
+       (+ fixkosten (* kosten-pro-besucher besucherzahl)))))
+
+(= (profit 100) 43000)
+(= (profit 10) 2500)
+
+; Aufgabe 7a
+; (define fixkosten 0)
+; (define kosten-pro-besucher 65)
+
+; Aufgabe 7b
+;; Berechnet den Profit des Kinos anhand der Besucherzahl
+;; [AUS VORLESUNG ÜBERNOMMEN]
+(define profit-unmodifiziert
+  (λ [kartenpreis]
+    (- (* (+ 120 (* (/ 15 10) (- 500 kartenpreis))) kartenpreis)
+       (+ 18000 (* 5 (+ 120 (* (/ 15 10) (- 500 kartenpreis))))))))
+
+(= (profit 100) 43000)
+(= (profit 10) 2500)
+
+;; Berechnet den Profit des Kinos anhand der Besucherzahl
+;; [AUS VORLESUNG ÜBERNOMMEN]
+(define profit-modifiziert
+  (λ [kartenpreis]
+    (- (* (+ 120 (* (/ 15 10) (- 500 kartenpreis))) kartenpreis)
+       (* 20 (+ 120 (* (/ 15 10) (- 500 kartenpreis)))))))
+
+
+(= (profit 100) 43000)
+(= (profit 10) 2500)

@@ -1,0 +1,226 @@
+;; The first three lines of this file were inserted by DrRacket. They record metadata
+;; about the language level of this file in a form that our tools can easily process.
+#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname aufgaben_01_02_2024) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #f #t none #f () #f)))
+;; Aufgabe 15 - Mitarbeiter
+
+;; Die monatliche Sollarbeitszeit in Minuten
+(define sollarbeitszeit 160)
+
+;; Der Überstundenfaktor
+(define überstundenfaktor 1.25)
+
+
+;; Ein festangestellter ist ein Wert
+;;     (make-festangestellter name grundgehalt arbeitsstunden)
+;; wobei name der Name, grundgehalt das Grundgehalt
+;; und arbeitsstunden die im letzten Monat gearbeiteten Arbeitsstunden des Festangestellten sind.
+(define-struct festangestellter [name grundgehalt arbeitsstunden])
+
+
+;; Berechnet den Bruttolohn eines Festangestellten
+(check-expect (festangestellter-bruttolohn (make-festangestellter "Bob" 400000 160)) 400000)
+(check-expect (festangestellter-bruttolohn (make-festangestellter "Bob" 400000 161)) 403125)
+(check-expect (festangestellter-bruttolohn (make-festangestellter "Bob" 400000 162)) 406250)
+
+(define festangestellter-bruttolohn
+  (λ [arbeiter]
+    (+ (festangestellter-grundgehalt arbeiter)
+       (* (festangestellter-grundgehalt arbeiter) (/ 1 sollarbeitszeit)
+          (- (festangestellter-arbeitsstunden arbeiter) sollarbeitszeit) überstundenfaktor))))
+
+
+;; Ein werkstudent ist ein Wert
+;;     (make-werkstudent name stundenlohn arbeitsstunden)
+;; wobei name der Name, stundenlohn der Stundenlohn
+;; und arbeitsstunden die im letzten Monat gearbeiteten Arbeitsstunden des Werkstundenten sind.
+(define-struct werkstudent [name stundenlohn arbeitsstunden])
+
+
+;; Berechnet den Bruttolohn eines Werkstudenten
+(check-expect (werkstudent-bruttolohn (make-werkstudent "Alice" 1500 160)) 240000)
+(check-expect (werkstudent-bruttolohn (make-werkstudent "Alice" 1500 161)) 241875)
+(check-expect (werkstudent-bruttolohn (make-werkstudent "Alice" 1500 162)) 243750)
+
+(define werkstudent-bruttolohn
+  (λ [arbeiter]
+    (* (werkstudent-stundenlohn arbeiter)
+       (+ sollarbeitszeit
+          (* überstundenfaktor
+             (- (werkstudent-arbeitsstunden arbeiter) sollarbeitszeit))))))
+
+
+;; Ein Mitarbeiter ist entweder
+;; - ein Festangestellter oder
+;; - ein Werkstudent
+;; Name: mitarbeiter
+
+
+;; Berechnet den Bruttolohn eines Mitarbeiters entsprechend seiner Arbeitsform
+(check-expect (bruttolohn (make-werkstudent "Alice" 1500 162)) 243750)
+(check-expect (bruttolohn (make-festangestellter "Bob" 400000 162)) 406250)
+
+(define bruttolohn
+  (λ [mitarbeiter]
+    (cond [(festangestellter? mitarbeiter) (festangestellter-bruttolohn mitarbeiter)]
+          [(werkstudent? mitarbeiter) (werkstudent-bruttolohn mitarbeiter)])))
+
+
+;; Aufgabe 17
+
+;; Berechnet die Summe aller Zahlen in einer Liste
+(check-expect (sum '(1 2 3 4 5)) 15)
+(check-expect (sum '(1 -1 2 -2)) 0)
+(check-expect (sum '()) 0)
+(check-expect (sum '(3)) 3)
+
+(define sum
+  (λ [x]
+    (cond [(empty? x) 0]
+          [else (+ (first x)
+                   (sum (rest x)))])))
+
+
+;; Berechnet das Produkt aller Zahlen in einer Liste
+(check-expect (prod '(1 2 3 4 5)) 120)
+(check-expect (prod '(1 -1 2 -2)) 4)
+(check-expect (prod '()) 1)
+(check-expect (prod '(3)) 3)
+
+(define prod
+  (λ [x]
+    (cond [(empty? x) 1]
+          [else (* (first x)
+                   (prod (rest x)))])))
+
+
+;; Berechnet das Maximum aller Zahlen in einer Liste
+(check-expect (maximum '(1 2 3 4 5)) 5)
+(check-expect (maximum '(1 -1 2 -2)) 2)
+(check-error (maximum '()) "Maximum einer leeren Liste ist nicht definiert")
+
+(define maximum
+  (λ [x]
+    (cond [(empty? x) (error "Maximum einer leeren Liste ist nicht definiert")]
+          [(empty? (rest x)) (first x)]
+          [else (max (first x)
+                     (maximum (rest x)))])))
+
+
+;; Überprüft, ob das Element in der Liste vorhanden ist
+(check-expect (enthält? '(1 2 3 4 5) 3) #t)
+(check-expect (enthält? '(1 -1 2 -2) -3) #f)
+
+(define enthält?
+  (λ [x el]
+    (cond [(empty? x) #f]
+          [else (or (equal? (first x) el)
+                    (enthält? (rest x) el))])))
+
+
+;; Gibt eine Liste zürck, dessen Elemente jeweils um 1
+;; kleiner sind als die der gegebenen Liste
+(check-expect (declist '(1 2 3 4 5)) '(0 1 2 3 4))
+(check-expect (declist '(1 -1 2 -2)) '(0 -2 1 -3))
+
+(define declist
+  (λ [x]
+    (cond [(empty? x) empty]
+          [else (cons (- (first x) 1)
+                      (declist (rest x)))])))
+
+
+;; Fügt zwei Listen zu einer zusammen
+(check-expect (concat '(1 2 3) '(4 5)) '(1 2 3 4 5))
+(check-expect (concat '(1 -1 2) '(-2)) '(1 -1 2 -2))
+
+(define concat
+  (λ [x y]
+    (cond [(empty? x) y]
+          [else (cons (first x)
+                      (concat (rest x) y))])))
+
+
+;; Gibt eine Liste zürck, die alle Elemente
+;; der geschachtelten Liste in ihrer auftretenden Reihenfolge enthält
+(check-expect (flatten '(1 (2 3) (4) 5)) '(1 2 3 4 5))
+(check-expect (flatten '(1 ((-1 2) -2))) '(1 -1 2 -2))
+
+(define flatten
+  (λ [x]
+    (cond [(empty? x) empty]
+          [(list? (first x)) (concat (flatten (first x))
+                             (flatten (rest x)))]
+          [else (cons (first x) (flatten (rest x)))])))
+
+
+;; Zählt die Häufigkeit eines Elements
+(check-expect (vorkommen '(1 2 3 3) 3) 2)
+(check-expect (vorkommen '(A B B C B) 'B) 3)
+
+(define vorkommen
+  (λ [x el]
+    (cond [(empty? x) 0]
+          [else (+ (cond [(equal? (first x) el) 1]
+                         [else 0])
+                   (vorkommen (rest x) el))])))
+
+
+;; Gibt eine Liste mit allen Elementen = el entfernt
+(check-expect (ohne '(A B B A B) 'B) '(A A))
+(check-expect (ohne '(1 1 -1 -2) -1) '(1 1 -2))
+
+(define ohne
+  (λ [x el]
+    (cond [(empty? x) empty]
+          [(equal? (first x) el) (ohne (rest x) el)]
+          [else (cons (first x)
+                      (ohne (rest x) el))])))
+
+
+;; Gibt eine Liste von Paaren zürck, die die Häufigkeit der Atome angeben
+(check-expect (frequencies '(A B B A B)) '((A 2) (B 3)))
+(check-expect (frequencies '(1 1 2 (1 2))) '((1 2) (2 1) ((1 2) 1)))
+
+(define frequencies
+  (λ [x]
+    (cond [(empty? x) empty]
+          [else (cons (cons (first x)
+                            (cons (vorkommen x (first x)) empty))
+                      (frequencies (ohne (rest x) (first x))))])))
+
+
+;; Aufgabe 18
+
+;; Berechnet das größte n, für das die Summe der ersten n Zahlen kleiner als ein Wert ist
+(check-expect (anzahl-bevor-summe-erreicht '(1 2 3 4 5) 10) 3)
+(check-expect (anzahl-bevor-summe-erreicht '(1 2 3 4 5) 15) 4)
+(check-error (anzahl-bevor-summe-erreicht '(1 2 3 4 5) 16) "Summe der Listenelemente zu klein")
+
+(define anzahl-bevor-summe-erreicht
+  (λ [lvz summe]
+    (cond [(empty? lvz) (error "Summe der Listenelemente zu klein")]
+          [(<= summe (first lvz)) 0]
+          [else (+ 1 (anzahl-bevor-summe-erreicht (rest lvz) (- summe (first lvz))))])))
+
+
+;; Multipliziert zwei Listen Element-weise
+(check-expect (mult-2-num-lists '(1 2 3) '(4 5 0)) '(4 10 0))
+(check-expect (mult-2-num-lists '(1 -1 2 -1) '(-2 0 5 -1)) '(-2 0 10 1))
+
+(define mult-2-num-lists
+  (λ [x y]
+    (cond [(or (empty? x) (empty? y)) empty]
+          [else (cons (* (first x) (first y))
+                      (mult-2-num-lists (rest x) (rest y)))])))
+
+
+;; Fügt zwei sortierte Listen zu einer sortierten Liste zusammen
+(check-expect (merge '(1 2 3) '(0 4 5)) '(0 1 2 3 4 5))
+(check-expect (merge '(-1 -1 1 2) '(-2 -1 0 5)) '(-2 -1 -1 -1 0 1 2 5))
+
+(define merge
+  (λ [x y]
+    (cond [(empty? x) y]
+          [(empty? y) x]
+          [(< (first x) (first y)) (cons (first x) (merge (rest x) y))]
+          [else  (cons (first y) (merge x (rest y)))])))
